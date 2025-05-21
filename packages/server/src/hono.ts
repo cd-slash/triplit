@@ -477,6 +477,22 @@ export async function createTriplitHonoServer(
     );
     return c.json(payload, statusCode as ContentfulStatusCode);
   });
+
+  app.post('/push-schema', maxPayloadMiddleware, async (c) => {
+    const newSchema = await c.req.json();
+    // We don't need the token for db.overrideSchema,
+    // but authentication middleware will have already run and validated the token.
+    // const token = c.get('token');
+    const change = await db.overrideSchema(newSchema);
+    if (change.successful) {
+      return c.json(change, 200);
+    }
+    // Determine appropriate status code based on the change object
+    // For example, 400 for invalid schema, 409 if there are conflicts
+    const statusCode = change.invalid ? 400 : 409;
+    return c.json(change, statusCode as ContentfulStatusCode);
+  });
+
   app.post('*', async (c) => {
     let body;
     try {
