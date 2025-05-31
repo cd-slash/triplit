@@ -1,5 +1,24 @@
 # @triplit/react-native
 
+## 1.0.42
+
+### Patch Changes
+
+- @triplit/react@1.0.40
+
+## 1.0.41
+
+### Patch Changes
+
+- @triplit/react@1.0.39
+
+## 1.0.40
+
+### Patch Changes
+
+- d82f8b0a: Add additional dep path resolutions for metro
+  - @triplit/react@1.0.38
+
 ## 1.0.39
 
 ### Patch Changes

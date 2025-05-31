@@ -123,7 +123,7 @@ export class TriplitClient<M extends Models<M> = Models> {
       entityStore: new EntityStoreWithOutbox(storage),
       kv: storage,
       clientId: Math.random().toString(36).substring(7),
-    }).then((db) => {
+    }).then(async ({ db, event }) => {
       // If we have a session set up at this point, use that info
       const decoded = this.token
         ? decodeToken(this.token, this.claimsPath)
@@ -172,6 +172,12 @@ export class TriplitClient<M extends Models<M> = Models> {
           }
         );
       }
+
+      // Wait for a valid db
+      if (options.experimental?.onDatabaseInit) {
+        await options.experimental?.onDatabaseInit(this.db, event);
+      }
+
       return Promise.resolve().then(() => {
         this.awaitReady = null;
       });
@@ -227,6 +233,11 @@ export class TriplitClient<M extends Models<M> = Models> {
         }
       }
     );
+  }
+
+  get ready() {
+    if (this.awaitReady) return this.awaitReady;
+    return Promise.resolve();
   }
 
   /**
@@ -622,21 +633,24 @@ export class TriplitClient<M extends Models<M> = Models> {
         fetchingRemote,
       });
     }
+    function setRemoteStatesToFalseAndFireIfChanged() {
+      let shouldFire = false;
+      if (fetchingRemote) {
+        fetchingRemote = false;
+        shouldFire = true;
+      }
+      if (waitingOnRemoteSync) {
+        waitingOnRemoteSync = false;
+        shouldFire = true;
+      }
+      if (shouldFire) {
+        fireSignal();
+      }
+    }
     fireSignal();
     const unsubConnectionStatus = this.onConnectionStatusChange((status) => {
       if (status === 'CLOSING' || status === 'CLOSED') {
-        let shouldFire = false;
-        if (fetchingRemote) {
-          fetchingRemote = false;
-          shouldFire = true;
-        }
-        if (waitingOnRemoteSync) {
-          waitingOnRemoteSync = false;
-          shouldFire = true;
-        }
-        if (shouldFire) {
-          fireSignal();
-        }
+        setRemoteStatesToFalseAndFireIfChanged();
         return;
       }
     }, true);
@@ -661,8 +675,10 @@ export class TriplitClient<M extends Models<M> = Models> {
         fetchingLocal = false;
         error = undefined;
         if (fetchingRemote) {
-          fetchingRemote = !this.syncEngine.hasServerRespondedForQuery(query);
-          waitingOnRemoteSync = fetchingRemote;
+          const hasResponded =
+            this.syncEngine.hasServerRespondedForQuery(query);
+          fetchingRemote = !hasResponded;
+          waitingOnRemoteSync = !hasResponded;
         }
         fireSignal();
       },
@@ -677,10 +693,8 @@ export class TriplitClient<M extends Models<M> = Models> {
         onQuerySyncStateChange: (status: QuerySyncState) => {
           // TODO: connected to TODO above, likely dupe to the onError callbackProvided above
           if (status === 'FULFILLED' || status === 'ERROR') {
-            if (!fetchingRemote) return;
-            fetchingRemote = false;
-            waitingOnRemoteSync = false;
-            fireSignal();
+            setRemoteStatesToFalseAndFireIfChanged();
+            return;
           }
           if (status === 'IN_FLIGHT' && !fetchingRemote) {
             fetchingRemote = true;
@@ -1251,6 +1265,7 @@ export class TriplitClient<M extends Models<M> = Models> {
   }
 
   get vars() {
+    // DANGEROUSLY references this.db without a ready check
     return { ...this.db.systemVars, $token: this.db.systemVars.$session };
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "@triplit/console",
-  "version": "1.0.38",
+  "version": "1.0.41",
   "files": [
     "dist"
   ],
@@ -46,7 +46,8 @@
     "superjson": "^2.2.1",
     "tailwind-merge": "^1.14.0",
     "tailwindcss-animate": "^1.0.7",
-    "turbo": "^2.0.4"
+    "turbo": "^2.0.4",
+    "uuidv7": "^1.0.2"
   },
   "devDependencies": {
     "@triplit/ui": "workspace:^",

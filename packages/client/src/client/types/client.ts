@@ -1,4 +1,11 @@
-import { KVStore, Models, Roles, TransactOptions } from '@triplit/db';
+import {
+  DB,
+  DBInitializationEvent,
+  KVStore,
+  Models,
+  Roles,
+  TransactOptions,
+} from '@triplit/db';
 import type { IndexedDbKVOptions } from '@triplit/db/storage/indexed-db';
 import { OnSessionErrorCallback, TokenRefreshOptions } from './sync.js';
 import {
@@ -79,7 +86,12 @@ export interface ClientOptions<M extends Models<M> = Models> {
   logLevel?: 'info' | 'warn' | 'error' | 'debug';
   skipRules?: boolean;
 
-  experimental?: {};
+  experimental?: {
+    onDatabaseInit?: (
+      client: DB<M>,
+      event: DBInitializationEvent
+    ) => void | Promise<void>;
+  };
 
   /**
    * The interval in seconds at which to ping the server to ensure connection stays alive. If set to 0 or undefined, pings are disabled. Defaults to 45 (seconds).

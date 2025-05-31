@@ -109,7 +109,7 @@ describe('Schema diffing', () => {
         attribute: ['id'],
         dataType: {
           type: 'string',
-          config: { nullable: false, default: { args: null, func: 'uuid' } },
+          config: { nullable: false, default: { args: null, func: 'nanoid' } },
         },
       },
     ]);
@@ -125,7 +125,7 @@ describe('Schema diffing', () => {
         attribute: ['id'],
         dataType: {
           type: 'string',
-          config: { nullable: false, default: { args: null, func: 'uuid' } },
+          config: { nullable: false, default: { args: null, func: 'nanoid' } },
         },
         isNewCollection: false,
       },
@@ -185,7 +185,7 @@ describe('Schema diffing', () => {
         type: 'delete',
         attribute: ['id'],
         dataType: {
-          config: { nullable: false, default: { args: null, func: 'uuid' } },
+          config: { nullable: false, default: { args: null, func: 'nanoid' } },
           type: 'string',
         },
       },
@@ -199,7 +199,7 @@ describe('Schema diffing', () => {
         attribute: ['id'],
         dataType: {
           type: 'string',
-          config: { nullable: false, default: { args: null, func: 'uuid' } },
+          config: { nullable: false, default: { args: null, func: 'nanoid' } },
         },
         isNewCollection: true,
       },
@@ -464,6 +464,25 @@ describe('detecting dangerous edits', () => {
       const results = await diffEnumAttributes(tx, withEnum, noEnum);
       expect(results.length).toBe(0);
     });
+  });
+
+  it('new collections are backwards compatible', async () => {
+    const db = new DB({ schema: stressTestSchema });
+    // await db.insert('stressTest', { id: 'test' });
+    const result = await db.overrideSchema(
+      {
+        collections: S.Collections({
+          stressTest: {
+            schema: S.Schema(stressTest),
+          },
+          newCollection: {
+            schema: S.Schema({ id: S.Id() }),
+          },
+        }),
+      },
+      { failOnBackwardsIncompatibleChange: true }
+    );
+    expect(result.successful).toBe(true);
   });
 });
 

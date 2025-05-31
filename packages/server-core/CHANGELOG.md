@@ -1,5 +1,32 @@
 # @triplit/server-core
 
+## 1.0.42
+
+### Patch Changes
+
+- Updated dependencies [c0138d32]
+  - @triplit/db@1.1.2
+
+## 1.0.41
+
+### Patch Changes
+
+- Updated dependencies [1573c075]
+  - @triplit/db@1.1.1
+
+## 1.0.40
+
+### Patch Changes
+
+- 0cea41b7: Add uuidv4 and uuidv7 default formats for IDs
+- ba6e9973: relax schema compat checks
+- Updated dependencies [0cea41b7]
+- Updated dependencies [bada3067]
+- Updated dependencies [3237065b]
+- Updated dependencies [ba6e9973]
+- Updated dependencies [00c2dd14]
+  - @triplit/db@1.1.0
+
 ## 1.0.39
 
 ### Patch Changes

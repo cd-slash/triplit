@@ -1,5 +1,30 @@
 # @triplit/entity-db
 
+## 1.1.2
+
+### Patch Changes
+
+- c0138d32: remove direct better-sqlite3 import from sqlite kv store
+
+## 1.1.1
+
+### Patch Changes
+
+- 1573c075: Fix bundling issue in Expo / React Native / Metro
+
+## 1.1.0
+
+### Minor Changes
+
+- 0cea41b7: Add uuidv4 and uuidv7 default formats for IDs
+
+### Patch Changes
+
+- bada3067: Include failed property in serialization error message
+- 3237065b: fix bug in default application for optional attrs
+- ba6e9973: relax schema compat checks
+- 00c2dd14: fixup expo-sqlite row parsing
+
 ## 1.0.35
 
 ### Patch Changes

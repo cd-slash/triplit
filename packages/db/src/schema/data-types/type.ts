@@ -19,6 +19,7 @@ import {
 import {
   BooleanType,
   DateType,
+  JsonType,
   NumberType,
   RecordProps,
   RecordType,
@@ -32,6 +33,7 @@ import {
 } from './operations.js';
 import { DEFAULTABLE_TYPE_KEYS_SET, PRIMITIVE_TYPE_KEYS_SET } from './index.js';
 import { hasNoValue, isDefaultFunction } from '../../utils/value.js';
+import { getOptionalDep } from '../../utils/optional-dep.js';
 
 /**
  * Returns an empty object for the given type
@@ -56,7 +58,7 @@ export function struct(type: DataType) {
  * If the type is a record, it returns an object with the default values for each property
  */
 export function defaultValue(type: DataType) {
-  if (hasDefault(type)) return calcDefaultValue(type.config);
+  if (hasConfigurableDefault(type)) return calcDefaultValue(type.config);
   if (type.type === 'record') {
     const result: any = {};
     for (const key in type.properties) {
@@ -79,8 +81,13 @@ export function assign(type: DataType, target: any, input: any) {
         // TODO: try to get propeties return DataType, not any
         // TODO: play around with default not being {} for TypeConfig, causing type.config: any
         const property = type.properties[key];
-        // If the property is optional and no input is provided, set to undefined so property exists
-        if (isOptional(property) && hasNoValue(input[key])) {
+        // If the property is optional and no input or default is provided, set to undefined so property exists
+        if (
+          isOptional(property) &&
+          hasNoValue(input[key]) &&
+          // If a default is provided, recursively call assign to use it
+          hasNoValue(property.config?.default)
+        ) {
           target[key] = input[key];
           continue;
         }
@@ -221,7 +228,11 @@ export function validateEncoded(
         // NOTE: may become == because null is equivalent to undefined
         if (options.partial && !(key in encoded)) continue;
         const validation = validateEncoded(property, encoded[key], options);
-        if (!validation.valid) return validation;
+        if (!validation.valid)
+          return {
+            valid: false,
+            error: `Property ${key} is invalid: ${validation.error}`,
+          };
       }
       return { valid: true };
     case 'string':
@@ -320,6 +331,7 @@ export function equal(a: DataType, b: DataType) {
   if (a.type === 'record' && b.type === 'record') return recordEqual(a, b);
   if (a.type === 'set' && b.type === 'set') return setEqual(a, b);
   if (a.type === 'string' && b.type === 'string') return stringEqual(a, b);
+  if (a.type === 'json' && b.type === 'json') return jsonEqual(a, b);
   return false;
 }
 
@@ -432,7 +444,13 @@ export function supportedOperations(type: DataType): ReadonlyArray<string> {
   );
 }
 
-export function hasDefault(type: DataType): type is DefaultableType {
+/**
+ * Checks if the type has a default value that can be configured
+ * NOT that a default value is provided
+ */
+export function hasConfigurableDefault(
+  type: DataType
+): type is DefaultableType {
   return DEFAULTABLE_TYPE_KEYS_SET.has(type.type as any);
 }
 
@@ -454,8 +472,12 @@ function calcDefaultValue(config: TypeConfig) {
       // If the default is a non special object, return it as is
       return attributeDefault;
     }
-    if (func === 'uuid') {
+    if (func === 'nanoid' || func === 'uuid') {
       return args && typeof args[0] === 'number' ? nanoid(args[0]) : nanoid();
+    } else if (func === 'uuidv4') {
+      return crypto.randomUUID();
+    } else if (func === 'uuidv7') {
+      return getOptionalDep<typeof import('uuidv7')>('uuidv7').uuidv7();
     } else if (func === 'now') {
       return new Date().toISOString();
     } else if (func === 'Set.empty') {
@@ -470,7 +492,7 @@ export function isOptional(type: DataType) {
 }
 
 function encodedValueMismatchMessage(type: string, value: any) {
-  return `Encoded value ${value} is not valid for type ${type}`;
+  return `Encoded value ${value} is not valid for type ${type}.`;
 }
 
 function recordEqual(a: RecordType, b: RecordType) {
@@ -487,6 +509,10 @@ function dateEqual(a: DateType, b: DateType) {
 }
 
 function numberEqual(a: NumberType, b: NumberType) {
+  return typeConfigEqual(a.config, b.config);
+}
+
+function jsonEqual(a: JsonType, b: JsonType) {
   return typeConfigEqual(a.config, b.config);
 }
 
