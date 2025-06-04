@@ -494,7 +494,7 @@ export async function createTriplitHonoServer(
     }
     // Determine appropriate status code based on the change object
     // For example, 400 for invalid schema, 409 if there are conflicts
-    const statusCode = change.invalid ? 400 : 409;
+    const statusCode = change.code === 'SCHEMA_INVALID' ? 400 : 409;
     return c.json(change, statusCode as ContentfulStatusCode);
   });
 
