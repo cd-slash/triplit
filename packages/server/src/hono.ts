@@ -386,6 +386,7 @@ export async function createTriplitHonoServer(
         );
       throw triplitError;
     }
+    }
   });
 
   app.post('/update-token', async (c) => {
@@ -496,6 +497,53 @@ export async function createTriplitHonoServer(
     // For example, 400 for invalid schema, 409 if there are conflicts
     const statusCode = change.invalid ? 400 : 409;
     return c.json(change, statusCode as ContentfulStatusCode);
+  });
+
+  app.post('/schema', async (c) => {
+    const token = c.get('token'); // Middleware should have set this
+    // The `server.handleRequest` for 'schema' already provides the schema object directly in the payload.
+    // The console expects { type: 'schema', schema: DBSchema }
+    // The session.getSchema() method (called by server.handleRequest) returns ServerResponse(200, { schema: this.db.schema })
+    // So the payload from server.handleRequest will be { schema: DBSchema }
+    const { statusCode, payload } = await server.handleRequest(
+      ['schema'],
+      {}, // No specific parameters needed for getSchema via this route
+      token
+    );
+
+    if (statusCode === 200 && payload && payload.schema) {
+      // Ensure the response structure matches what the console expects
+      return c.json({ type: 'schema', schema: payload.schema }, statusCode as ContentfulStatusCode);
+    } else if (payload) {
+      // If there was an error or unexpected payload structure, return it as is
+      return c.json(payload, statusCode as ContentfulStatusCode);
+    } else {
+      // Fallback for unexpected errors where payload might be undefined
+      return c.json({ error: 'Failed to retrieve schema' }, 500);
+    }
+  });
+
+  app.post('/stats', async (c) => {
+    const token = c.get('token'); // Middleware should have set this
+    // The `server.handleRequest` for 'stats' should directly return CollectionStats[] in the payload.
+    // session.getCollectionStats() returns ServerResponse(200, stats) where stats is CollectionStats[]
+    const { statusCode, payload } = await server.handleRequest(
+      ['stats'],
+      {}, // No specific parameters needed for getCollectionStats via this route
+      token
+    );
+
+    // The console expects CollectionStats[] directly.
+    // If server.handleRequest was successful, payload will be the CollectionStats[]
+    if (statusCode === 200 && payload) {
+      return c.json(payload, statusCode as ContentfulStatusCode);
+    } else if (payload) {
+      // If there was an error or unexpected payload structure, return it as is
+      return c.json(payload, statusCode as ContentfulStatusCode);
+    } else {
+      // Fallback for unexpected errors where payload might be undefined
+      return c.json({ error: 'Failed to retrieve stats' }, 500);
+    }
   });
 
   app.post('*', async (c) => {
