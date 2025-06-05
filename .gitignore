@@ -16,3 +16,4 @@ tsconfig.tsbuildinfo
 
 .turbo
 .idea
+.DS_Store
