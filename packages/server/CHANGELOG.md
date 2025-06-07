@@ -1,5 +1,35 @@
 # @triplit/server
 
+## 1.1.0
+
+### Minor Changes
+
+- 4841af99: Remove storage provider string parsing from hono server
+
+### Patch Changes
+
+- Updated dependencies [d637845a]
+- Updated dependencies [d9ec4b1d]
+  - @triplit/db@1.1.4
+  - @triplit/client@1.0.42
+  - @triplit/server-core@1.0.45
+
+## 1.0.52
+
+### Patch Changes
+
+- Updated dependencies [592ee3b2]
+  - @triplit/db@1.1.3
+  - @triplit/client@1.0.41
+  - @triplit/server-core@1.0.44
+
+## 1.0.51
+
+### Patch Changes
+
+- Updated dependencies [c9878f2a]
+  - @triplit/server-core@1.0.43
+
 ## 1.0.50
 
 ### Patch Changes

@@ -1,5 +1,25 @@
 # @triplit/server-core
 
+## 1.0.45
+
+### Patch Changes
+
+- Updated dependencies [d637845a]
+  - @triplit/db@1.1.4
+
+## 1.0.44
+
+### Patch Changes
+
+- Updated dependencies [592ee3b2]
+  - @triplit/db@1.1.3
+
+## 1.0.43
+
+### Patch Changes
+
+- c9878f2a: clean up syncConnection ivm state on query disconnect
+
 ## 1.0.42
 
 ### Patch Changes
